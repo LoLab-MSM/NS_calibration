@@ -21,5 +21,7 @@ def process_data(data):
     for i, each in enumerate(data_object):
         for j, item in enumerate(each):
             data_object[i][j] = float(data_object[i][j])
+    for i, each in enumerate(data_object):
+        data_object[i][0] = data_object[i][0]
 
     return data_object

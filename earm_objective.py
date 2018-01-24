@@ -7,6 +7,12 @@ import math
 
 def objective_function(ex_data, simulation):
 
+    for i, each in enumerate(ex_data):
+        ex_data[i][0] = ex_data[i][0]/180.0
+    for i, each in enumerate(simulation):
+        if i != 0:
+            simulation[i][0] = simulation[i][0]/180.0
+
     # setup: find indices for [bidM, bidU, bidT, smacA, smacC, smacM, parpC, parpU]
     names = ['BidM_obs', 'BidU_obs', 'BidT_obs', 'SmacA_obs', 'SmacC_obs', 'SmacM_obs', 'ParpC_obs', 'ParpU_obs']
     indices = [None for _ in range(len(names))]
@@ -41,7 +47,7 @@ def objective_function(ex_data, simulation):
     # point and created by the simulated points.
 
     points = []
-
+    values = []
     for i, each in enumerate(simulation):
         if i >= 1:
 
@@ -49,6 +55,10 @@ def objective_function(ex_data, simulation):
             s_point = simulation[i][indices[3]] / (simulation[i][indices[3]] + simulation[i][indices[4]] + simulation[i][indices[5]])
             p_point = simulation[i][indices[6]] / (simulation[i][indices[6]] + simulation[i][indices[7]])
             points.append([simulation[i][0], b_point, s_point, p_point])
+
+            values.append([simulation[i][indices[0]], simulation[i][indices[1]], simulation[i][indices[2]],
+                           simulation[i][indices[3]], simulation[i][indices[4]], simulation[i][indices[5]],
+                           simulation[i][indices[6]], simulation[i][indices[7]]])
 
     scores = []
 
@@ -211,7 +221,7 @@ def objective_function(ex_data, simulation):
             # parp score
             min_perp_dist_p = - ((points[i-1 + 1][0] - points[i-1][0]) * (points[i-1][0] - ex_data[i][0])
                                  + (points[i-1 + 1][3] - points[i-1][3]) * (points[i-1][3] - ex_data[i][3])) \
-                              / ((points[i-1 + 1][0] - points[i-1][0]) ** 2 + (points[i-1 + 1][3] - points[i-1][3]) ** 2)
+                    / ((points[i-1 + 1][0] - points[i-1][0]) ** 2 + (points[i-1 + 1][3] - points[i-1][3]) ** 2)
 
             if 0 <= min_perp_dist_p <= 1:
                 score_p = abs((points[i-1 + 1][0] - points[i-1][0]) * (points[i-1][3] - ex_data[i][3])
@@ -235,5 +245,3 @@ def objective_function(ex_data, simulation):
     mse = se / (len(scores) * len(scores[0]))
 
     return mse
-
-
