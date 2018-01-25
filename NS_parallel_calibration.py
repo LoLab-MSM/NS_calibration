@@ -35,7 +35,8 @@ from math import *
 from os.path import isfile
 from copy import deepcopy
 import pathos.pools as pp
-
+import itertools
+from pathos.helpers import mp as multiprocess
 
 class NS:
 
@@ -62,7 +63,7 @@ class NS:
         self.target_score = target_score
         self.set_number = set_number - 1
         self.time = []
-        self.working_set = []
+        self.working_set = None
         self.params = []
         self.stop = 'None'
         self.process_num = proc_number
@@ -99,25 +100,42 @@ class NS:
 
         summary.close()
 
-    def _parallel_initialize(self, dummy):
 
-        # randomly choose points from parameter space
-        coords = []
-        np.random.seed()
-        for each in self.params:
-            if isinstance(each, list):
-                coords.append(10 ** (np.random.uniform(each[0], each[1])))
-            else:
-                coords.append(each)
-
-        objective = self._compute_objective(deepcopy(coords))
-        # if not isnan(objective):
-
-        print len(self.working_set), objective
-
-        return [objective, coords]
+        # # randomly choose points from parameter space
+        # coords = []
+        # np.random.seed()
+        # for each in self.params:
+        #     if isinstance(each, list):
+        #         coords.append(10 ** (np.random.uniform(each[0], each[1])))
+        #     else:
+        #         coords.append(each)
+        #
+        # objective = self._compute_objective(deepcopy(coords))
+        # # if not isnan(objective):
+        #
+        # print len(self.working_set), objective
+        #
+        # return [objective, coords]
 
     def _initiate_log(self):
+
+        def parallel_initialize(num_tasks):
+
+            count = 0
+            pop_list = []
+            while count < num_tasks:
+                coords = []
+                np.random.seed()
+                for item in self.params:
+                    if isinstance(item, list):
+                        coords.append(10 ** (np.random.uniform(item[0], item[1])))
+                    else:
+                        coords.append(item)
+                objective = self._compute_objective(deepcopy(coords))
+                pop_list.append([objective, coords])
+                count += 1
+
+            return pop_list
 
         # retrieve time points from data
         for each in self.processed_data:
@@ -140,18 +158,16 @@ class NS:
         # create solver object
         self.model_solver = Solver(self.model, self.time, integrator='lsoda', integrator_options={'atol': 1e-12, 'rtol': 1e-12, 'mxstep': 20000})
 
-        # construct the working population of N parameter sets
+        # distribute the working set population among processes
+        tasks_per_process = [int(ceil((float(self.N))/float(self.process_num))) for _ in range(self.process_num)]
+        sum_tpp = sum(tasks_per_process)
+        while sum_tpp < self.N:
+            sum_tpp += 1
+            tasks_per_process[-1] += 1
 
+        # construct, in parallel, the working population of N parameter sets
         p = pp.ProcessPool(self.process_num)
-        while len(self.working_set) < self.N:
-
-            new_points = p.map(self._parallel_initialize, self.dummy)
-
-            for each in new_points:
-                if not isnan(each[0]):
-                    self.working_set.append(each)
-
-        self.working_set = self.working_set[:self.N]
+        self.working_set = list(itertools.chain.from_iterable(p.map(parallel_initialize, tasks_per_process)))
         self.working_set.sort()
 
     def _compute_objective(self, point):
@@ -174,15 +190,15 @@ class NS:
         else:
             return False
 
-    def _parallel_nested_sampling(self, dummy):
-
-        # sample from the prior
-        test_point = self._KDE_sample_log(dummy)
-
-        # calculate objective
-        test_point_objective = self._compute_objective(test_point)
-
-        return[test_point_objective, test_point]
+    # def _parallel_nested_sampling(self, dummy):
+    #
+    #     # sample from the prior
+    #     test_point = self._KDE_sample_log(dummy)
+    #
+    #     # calculate objective
+    #     test_point_objective = self._compute_objective(test_point)
+    #
+    #     return[test_point_objective, test_point]
 
     def _nested_sampling_KDE(self):
 
@@ -190,10 +206,21 @@ class NS:
         iteration = 1
         score_criteria = self.working_set[self.set_number][0]
 
+        def parallel_nested_sampling(dummy):
+
+            # sample from the prior
+            test_point = self._KDE_sample_log(dummy)
+
+            # calculate objective
+            test_point_objective = self._compute_objective(test_point)
+
+            return [test_point_objective, test_point]
+
         # test new points until termination criteria are met
 
         p = pp.ProcessPool(self.process_num)
         while iteration <= self.iterations and self.scalar > self.scalar_limit and score_criteria > self.target_score:
+
             print iteration, self.scalar, score_criteria
             self.simulations += self.process_num
             self.iteration = iteration
@@ -203,7 +230,7 @@ class NS:
                 useless_samples = 0
                 self.scalar_reductions += 1
 
-            provisional_points = p.map(self._parallel_nested_sampling, self.dummy)
+            provisional_points = p.map(parallel_nested_sampling, self.dummy)
             new_points = []
             for each in provisional_points:
                 if not isnan(each[0]):

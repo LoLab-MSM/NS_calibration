@@ -11,6 +11,6 @@ NS(model,
     'earm_data.csv',
     1000,                         # population size
     10000,                       # max number of iterations
-    0.001,                          # target score (lower is better)
+    0.01,                          # target score (lower is better)
     10)                           # number of parameter sets guaranteed to meet target score
 

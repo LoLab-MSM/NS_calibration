@@ -120,8 +120,6 @@ class NS:
         self.model_solver = Solver(self.model, self.time, integrator='lsoda', integrator_options={'atol': 1e-12, 'rtol': 1e-12, 'mxstep': 20000})
 
         # construct the working population of N parameter sets
-        # todo: parallelize (easy)
-
         k = 0
         while k < self.N:
 
@@ -133,10 +131,10 @@ class NS:
                 else:
                     point.append(each)
 
-            objective = self._compute_objective(deepcopy(point))
+            objective = self._compute_objective(point)
             if not isnan(objective):
                 self.working_set.append([objective, point])
-                print k, [objective, point]
+                print k, objective
                 k += 1
 
         self.working_set.sort()
@@ -156,9 +154,11 @@ class NS:
 
         # calculate the cost
         cost = self.objective_function(self.processed_data, sim_trajectories)
+
         if isinstance(cost, float):
             return cost
         else:
+            print 'pppp'
             return False
 
     def _nested_sampling_KDE(self):
@@ -168,8 +168,6 @@ class NS:
         score_criteria = self.working_set[self.set_number][0]
 
         # test new points until termination criteria are met
-        # todo: parallelize: parallel point testing using common working set
-
         while iteration <= self.iterations and self.scalar > self.scalar_limit and score_criteria > self.target_score:
             print iteration, self.scalar, score_criteria
             self.simulations += 1
