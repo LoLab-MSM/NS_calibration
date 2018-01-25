@@ -3,10 +3,11 @@
 # depending on the available data and the given model.
 
 import math
+from copy import deepcopy
 
 
-def objective_function(ex_data, simulation):
-
+def objective_function(ex, simulation):
+    ex_data = deepcopy(ex)
     for i, each in enumerate(ex_data):
         ex_data[i][0] = ex_data[i][0]/180.0
     for i, each in enumerate(simulation):
@@ -237,11 +238,10 @@ def objective_function(ex_data, simulation):
                 best[2] = score_p
 
         scores.append(best)
-
+        # print best
     se = 0
     for each in scores:
         for item in each:
             se += item**2
     mse = se / (len(scores) * len(scores[0]))
-
     return mse
