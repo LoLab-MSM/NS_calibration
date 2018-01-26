@@ -29,6 +29,8 @@
 # a given number of them less than the provided score criteria.
 # Additional statistics (number of iterations, etc.) are also given.
 
+# import sys
+# sys.path.insert(0, '/home/kochenma/pysb')
 from pysb.integrate import Solver
 import numpy as np
 from math import *
@@ -100,23 +102,6 @@ class NS:
 
         summary.close()
 
-
-        # # randomly choose points from parameter space
-        # coords = []
-        # np.random.seed()
-        # for each in self.params:
-        #     if isinstance(each, list):
-        #         coords.append(10 ** (np.random.uniform(each[0], each[1])))
-        #     else:
-        #         coords.append(each)
-        #
-        # objective = self._compute_objective(deepcopy(coords))
-        # # if not isnan(objective):
-        #
-        # print len(self.working_set), objective
-        #
-        # return [objective, coords]
-
     def _initiate_log(self):
 
         def parallel_initialize(num_tasks):
@@ -131,8 +116,9 @@ class NS:
                         coords.append(10 ** (np.random.uniform(item[0], item[1])))
                     else:
                         coords.append(item)
-                objective = self._compute_objective(deepcopy(coords))
+                objective = self._compute_objective(coords)
                 pop_list.append([objective, coords])
+                print objective
                 count += 1
 
             return pop_list
@@ -156,7 +142,7 @@ class NS:
                 self.params.append(self.prior_1kc)
 
         # create solver object
-        self.model_solver = Solver(self.model, self.time, integrator='lsoda', integrator_options={'atol': 1e-12, 'rtol': 1e-12, 'mxstep': 20000})
+        self.model_solver = Solver(self.model, self.time, integrator='lsoda', integrator_options={'atol': 1e-8, 'rtol': 1e-8, 'mxstep': 20000})
 
         # distribute the working set population among processes
         tasks_per_process = [int(ceil((float(self.N))/float(self.process_num))) for _ in range(self.process_num)]
@@ -190,29 +176,63 @@ class NS:
         else:
             return False
 
-    # def _parallel_nested_sampling(self, dummy):
-    #
-    #     # sample from the prior
-    #     test_point = self._KDE_sample_log(dummy)
-    #
-    #     # calculate objective
-    #     test_point_objective = self._compute_objective(test_point)
-    #
-    #     return[test_point_objective, test_point]
-
     def _nested_sampling_KDE(self):
 
         useless_samples = 0
         iteration = 1
         score_criteria = self.working_set[self.set_number][0]
 
+        def KDE_sample_log(dummy):
+
+            # select data point
+            np.random.seed()
+            data_point = np.random.randint(0, len(self.working_set) - 1)
+            coordinates = self.working_set[data_point][1]
+
+            # select parameter values individually from normal with respect to prior boundary
+            new_point = []
+            for i, item in enumerate(coordinates):
+                if isinstance(self.params[i], float):
+                    new_point.append(self.params[i])
+                else:
+                    accept = False
+                    log_coord = None
+
+                    while not accept:
+                        log_coord = np.random.normal(log10(item), self.scalar)
+                        if self.params[i][0] <= log_coord <= self.params[i][1]:
+                            accept = True
+                    new_point.append(10 ** log_coord)
+
+            return new_point
+
+        def compute_objective(point):
+
+            # simulate a point
+            self.model_solver.run(point)
+
+            # construct simulation trajectories
+            sim_trajectories = [['time']]
+            for item in self.model.observables:
+                sim_trajectories[0].append(item.name)
+
+            for i, item in enumerate(self.model_solver.yobs):
+                sim_trajectories.append([self.time[i]] + list(item))
+
+            # calculate the cost
+            cost = self.objective_function(self.processed_data, sim_trajectories)
+            if isinstance(cost, float):
+                return cost
+            else:
+                return False
+
         def parallel_nested_sampling(dummy):
 
             # sample from the prior
-            test_point = self._KDE_sample_log(dummy)
+            test_point = KDE_sample_log(dummy)
 
             # calculate objective
-            test_point_objective = self._compute_objective(test_point)
+            test_point_objective = compute_objective(test_point)
 
             return [test_point_objective, test_point]
 

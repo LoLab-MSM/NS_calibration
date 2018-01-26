@@ -13,4 +13,4 @@ NS(model,
     10000,                       # max number of iterations
     0.01,                          # target score (lower is better)
     10,                           # number of parameter sets guaranteed to meet target score
-    4)                            # number of processes
+    16)                            # number of processes

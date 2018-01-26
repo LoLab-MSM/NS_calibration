@@ -93,7 +93,6 @@ class NS:
         for i, each in enumerate(self.working_set):
             summary.write(''.join(str(each[1])[1:-1]) + '\n')
         summary.write('\n')
-
         summary.close()
 
     def _initiate_log(self):
@@ -158,7 +157,6 @@ class NS:
         if isinstance(cost, float):
             return cost
         else:
-            print 'pppp'
             return False
 
     def _nested_sampling_KDE(self):
