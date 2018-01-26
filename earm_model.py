@@ -1,9 +1,5 @@
-
-import numpy as np
-from pysb.integrate import Solver
-import pylab as pl
 from pysb import Model, Monomer, Parameter, Rule, Observable, Initial
-from process_earm_data import process_data
+
 
 Model()
 
@@ -336,6 +332,14 @@ Initial(BakM(BidM=None, BakA=None), BakM_0)
 Initial(BadM(Bcl2=None, BclxLM=None), BadM_0)
 Initial(ParpC(), ParpC_0)
 Initial(BclxLC(), BclxLC_0)
+# Fig 4B
+Observable('Bid_unbound',   BidU())
+Observable('PARP_unbound',  ParpU())
+Observable('mSmac_unbound', SmacM())
+
+Observable('tBid_total',  BidT()+BidM())
+Observable('CPARP_total', ParpC())
+Observable('cSmac_total', SmacC()+SmacA())
 
 # display
 
