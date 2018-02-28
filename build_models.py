@@ -6,7 +6,7 @@
 
 # def build_models(model_name, num_models):
 
-model_name = 'earm_model.py'
+model_name = 'model_804.py'
 num_models = 10
 
 parameter_count = 0
@@ -15,7 +15,7 @@ for line in mod:
     if 'Parameter' in line and 'pysb' not in line:
         parameter_count += 1
 
-params = open('earm_model_results_0.txt', 'r')
+params = open('model_804_results_0.txt', 'r')
 
 ps = False
 i = 0

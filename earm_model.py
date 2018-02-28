@@ -339,38 +339,38 @@ Initial(BclxLC(), BclxLC_0)
 
 # display
 
-# t = np.linspace(0, 20160, 113)
-# solve_mod = Solver(model, t)
-# solve_mod.run()
-#
-# pl.figure(figsize=(16, 12))
-# pl.plot(t, solve_mod.yobs['BidM_obs']/(solve_mod.yobs['BidM_obs']+solve_mod.yobs['BidU_obs']+solve_mod.yobs['BidT_obs']), label="mBid/Bid")
-# pl.plot(t, solve_mod.yobs['SmacA_obs']/(solve_mod.yobs['SmacA_obs']+solve_mod.yobs['SmacC_obs']+solve_mod.yobs['SmacM_obs']), label="aSmac/Smac")
-# pl.plot(t, solve_mod.yobs['ParpC_obs']/(solve_mod.yobs['ParpC_obs']+solve_mod.yobs['ParpU_obs']), label="cParp/Parp")
-#
-# data = process_data('earm_data.csv')
-# data = map(list, zip(*data))
-#
-# pl.plot(t, data[1], 'ro', c='b', label="IC-RP (Bid)")
-# pl.plot(t, data[2], 'ro', c='g', label="IMS-RP (Smac)")
-# pl.plot(t, data[3], 'ro', c='r', label="EC-RP (Parp)")
-#
-# summ = 0.0
-# ind = 0
-# for i, each in enumerate(data[1][1:]):
-#     summ += ((solve_mod.yobs['BidM_obs'][i] / (solve_mod.yobs['BidM_obs'][i] + solve_mod.yobs['BidU_obs'][i] + solve_mod.yobs['BidT_obs'][i])) - data[1][1:][i])**2
-#     summ += ((solve_mod.yobs['SmacA_obs'][i] / (solve_mod.yobs['SmacA_obs'][i] + solve_mod.yobs['SmacC_obs'][i] + solve_mod.yobs['SmacM_obs'][i])) - data[2][1:][i])**2
-#     summ += ((solve_mod.yobs['ParpC_obs'][i] / (solve_mod.yobs['ParpC_obs'][i] + solve_mod.yobs['ParpU_obs'][i])) - data[3][1:][i])**2
-#     ind += 3
-#
-# summ = float(summ)
-# ind = int(ind)
-#
-# pl.legend(loc='lower right', fontsize=20, numpoints=1)
-# pl.xlabel("Time (s)", fontsize=20)
-# pl.ylabel("Molecules/cell", fontsize=20)
-# pl.title('earm data vs calibration', fontsize=22)
-# pl.tick_params(labelsize=16)
-# pl.xlim([0, 20200])
-#
-# pl.show()
+t = np.linspace(0, 20160, 113)
+solve_mod = Solver(model, t)
+solve_mod.run()
+
+pl.figure(figsize=(16, 12))
+pl.plot(t, solve_mod.yobs['BidM_obs']/(solve_mod.yobs['BidM_obs']+solve_mod.yobs['BidU_obs']+solve_mod.yobs['BidT_obs']), label="mBid/Bid")
+pl.plot(t, solve_mod.yobs['SmacA_obs']/(solve_mod.yobs['SmacA_obs']+solve_mod.yobs['SmacC_obs']+solve_mod.yobs['SmacM_obs']), label="aSmac/Smac")
+pl.plot(t, solve_mod.yobs['ParpC_obs']/(solve_mod.yobs['ParpC_obs']+solve_mod.yobs['ParpU_obs']), label="cParp/Parp")
+
+data = process_data('earm_data.csv')
+data = map(list, zip(*data))
+
+pl.plot(t, data[1], 'ro', c='b', label="IC-RP (Bid)")
+pl.plot(t, data[2], 'ro', c='g', label="IMS-RP (Smac)")
+pl.plot(t, data[3], 'ro', c='r', label="EC-RP (Parp)")
+
+summ = 0.0
+ind = 0
+for i, each in enumerate(data[1][1:]):
+    summ += ((solve_mod.yobs['BidM_obs'][i] / (solve_mod.yobs['BidM_obs'][i] + solve_mod.yobs['BidU_obs'][i] + solve_mod.yobs['BidT_obs'][i])) - data[1][1:][i])**2
+    summ += ((solve_mod.yobs['SmacA_obs'][i] / (solve_mod.yobs['SmacA_obs'][i] + solve_mod.yobs['SmacC_obs'][i] + solve_mod.yobs['SmacM_obs'][i])) - data[2][1:][i])**2
+    summ += ((solve_mod.yobs['ParpC_obs'][i] / (solve_mod.yobs['ParpC_obs'][i] + solve_mod.yobs['ParpU_obs'][i])) - data[3][1:][i])**2
+    ind += 3
+
+summ = float(summ)
+ind = int(ind)
+
+pl.legend(loc='lower right', fontsize=20, numpoints=1)
+pl.xlabel("Time (s)", fontsize=20)
+pl.ylabel("Molecules/cell", fontsize=20)
+pl.title('earm data vs calibration', fontsize=22)
+pl.tick_params(labelsize=16)
+pl.xlim([0, 20200])
+
+pl.show()

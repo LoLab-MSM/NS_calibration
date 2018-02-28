@@ -29,6 +29,8 @@
 # a given number of them less than the provided score criteria.
 # Additional statistics (number of iterations, etc.) are also given.
 
+# import sys
+# sys.path.insert(0, '/home/kochenma/pysb')
 from pysb.integrate import Solver
 import numpy as np
 from math import *
